@@ -1,53 +1,57 @@
 # RevoTickets
 
-Professional Discord Ticket Support System with buttons + slash commands.
+بوت Discord احترافي لإدارة نظام التذاكر بالأزرار و Slash Commands مع حفظ كامل للبيانات.
 
-## Features
+## المميزات القوية
 
-- Button-based ticket creation (`🎟️ Open Ticket`)
-- Full `/ticket` slash command suite:
+- فتح التذكرة بزر `🎟️ Open Ticket`.
+- أوامر `/ticket` متكاملة:
   - `setup`, `message`, `staff-role`, `limit`
-  - `close`, `delete`, `add`, `remove`, `rename`, `reopen`
-- Advanced logs in a configured logs channel
-- Transcript export as HTML (`discord-html-transcripts`)
-- Anti-spam + ticket-per-user limit
-- Persistent JSON storage (`data.json`)
+  - `close`, `reopen`, `delete`, `transcript`
+  - `add`, `remove`, `rename`
+- نظام صلاحيات قوي:
+  - الإدارة + رتب الدعم فقط لإدارة حساسة (Claim/Delete/Add/Remove).
+  - صاحب التذكرة يمكنه التعامل مع تذكرته ضمن الحدود.
+- حفظ دائم في `data.json` حتى بعد إعادة التشغيل.
+- Anti-Spam/Rate Limit لمنع فتح تذاكر بسرعة.
+- Transcript HTML لكل تذكرة.
+- نظام Log احترافي لكل عمليات التذكرة.
 
-## Setup
+## التشغيل
 
-1. Install dependencies:
+1. تثبيت الحزم:
    ```bash
    npm install
    ```
-2. Copy env file:
+2. إنشاء ملف البيئة:
    ```bash
    cp .env.example .env
    ```
-3. Fill `.env` values:
+3. تعبئة القيم:
    - `DISCORD_TOKEN`
    - `CLIENT_ID`
-   - optional `GUILD_ID` (for fast guild-only slash command deploy)
-4. Deploy commands:
+   - `GUILD_ID` (اختياري للنشر السريع)
+4. نشر الأوامر:
    ```bash
    npm run deploy
    ```
-5. Start bot:
+5. تشغيل البوت:
    ```bash
    npm start
    ```
 
-## First-time Discord configuration
+> لا يوجد أي نظام كلمة مرور داخل البوت. التحكم يتم عبر صلاحيات Discord فقط.
 
-1. Run `/ticket setup` and choose:
-   - panel channel
-   - tickets category
-   - logs channel
-2. Run `/ticket staff-role` (repeat if multiple support roles)
-3. Run `/ticket limit 1` (or any value 1–5)
-4. Run `/ticket message` to send panel embed with button
+## الإعداد لأول مرة داخل السيرفر
 
-## Notes
+1. نفّذ `/ticket setup` وحدد:
+   - روم البانل
+   - فئة التذاكر
+   - روم اللوغ
+2. نفّذ `/ticket staff-role` لإضافة رتبة الدعم.
+3. نفّذ `/ticket limit 1` (أو قيمة من 1 إلى 5).
+4. نفّذ `/ticket message` لإرسال رسالة فتح التذكرة.
 
-- Data is persisted in `data.json`.
-- Ticket names are auto-numbered: `ticket-001`, `ticket-002`, ...
-- Use channel-level permissions so bot can create/manage channels.
+## ملاحظة
+
+- اسم التذكرة تلقائي: `ticket-001`, `ticket-002`, ...
