@@ -1,0 +1,18 @@
+{
+  "name": "revo-tickets",
+  "version": "1.0.0",
+  "description": "Professional Discord ticket support bot",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/index.js",
+    "deploy": "node src/deploy-commands.js",
+    "lint": "node --check src/index.js src/deploy-commands.js src/lib/*.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "discord.js": "^14.16.3"
+  }
+}
