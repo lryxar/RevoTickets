@@ -19,6 +19,8 @@ def _default_guild_state() -> Dict[str, Any]:
             "open_cooldown_seconds": 7,
             "welcome_message": "Support team will assist you shortly.",
             "auto_close_hours": 0,
+            "transcript_on_close": True,
+            "claim_required": False,
         },
         "ticket_counter": 0,
         "open_tickets": {},
@@ -42,6 +44,8 @@ def _normalize_guild(raw_guild: Dict[str, Any] | None) -> Dict[str, Any]:
     ticket_limit = setup.get("ticket_limit", 1)
     cooldown = setup.get("open_cooldown_seconds", 7)
     auto_close_hours = setup.get("auto_close_hours", 0)
+    transcript_on_close = setup.get("transcript_on_close", True)
+    claim_required = setup.get("claim_required", False)
 
     return {
         "setup": {
@@ -54,6 +58,8 @@ def _normalize_guild(raw_guild: Dict[str, Any] | None) -> Dict[str, Any]:
             "open_cooldown_seconds": cooldown if isinstance(cooldown, int) and cooldown >= 3 else 7,
             "welcome_message": (setup.get("welcome_message") or base["welcome_message"])[:1200],
             "auto_close_hours": auto_close_hours if isinstance(auto_close_hours, int) and auto_close_hours >= 0 else 0,
+            "transcript_on_close": bool(transcript_on_close),
+            "claim_required": bool(claim_required),
         },
         "ticket_counter": raw_guild.get("ticket_counter", 0)
         if isinstance(raw_guild.get("ticket_counter", 0), int) and raw_guild.get("ticket_counter", 0) >= 0

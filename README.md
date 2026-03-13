@@ -46,12 +46,17 @@ python src/deploy_commands.py
 
 ### إعداد وإدارة النظام
 - `/ticket setup`
+- `/ticket set_panel`
+- `/ticket set_category`
+- `/ticket set_logs`
 - `/ticket message`
 - `/ticket settings`
 - `/ticket set_prefix`
 - `/ticket set_welcome`
 - `/ticket set_cooldown`
 - `/ticket set_autoclose`
+- `/ticket set_transcript_on_close`
+- `/ticket set_claim_required`
 - `/ticket staff_add`
 - `/ticket staff_remove`
 - `/ticket staff_list`

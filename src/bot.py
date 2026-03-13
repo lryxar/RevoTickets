@@ -28,10 +28,19 @@ intents = discord.Intents.default()
 intents.guilds = True
 intents.guild_messages = True
 
-client = discord.Client(intents=intents)
-tree = discord.app_commands.CommandTree(client)
 state = load_state()
 open_rate_limit: Dict[int, float] = {}
+
+
+class RevoClient(discord.Client):
+    async def setup_hook(self) -> None:
+        self.add_view(build_panel_view())
+        self.add_view(build_control_view())
+        self.loop.create_task(_auto_close_worker())
+
+
+client = RevoClient(intents=intents)
+tree = discord.app_commands.CommandTree(client)
 
 
 def _get_config(guild: discord.Guild) -> Dict[str, Any]:
@@ -191,6 +200,30 @@ class TicketHandlers:
         save_state(state)
         await _safe_reply(interaction, "✅ Ticket setup saved.")
 
+    async def cmd_set_panel(self, interaction: discord.Interaction, panel_channel: discord.TextChannel) -> None:
+        guild, _user, config = await self._ensure_admin(interaction)
+        if not guild or not config:
+            return
+        config["setup"]["panel_channel_id"] = str(panel_channel.id)
+        save_state(state)
+        await _safe_reply(interaction, "✅ Panel channel updated.")
+
+    async def cmd_set_category(self, interaction: discord.Interaction, category: discord.CategoryChannel) -> None:
+        guild, _user, config = await self._ensure_admin(interaction)
+        if not guild or not config:
+            return
+        config["setup"]["ticket_category_id"] = str(category.id)
+        save_state(state)
+        await _safe_reply(interaction, "✅ Ticket category updated.")
+
+    async def cmd_set_logs(self, interaction: discord.Interaction, logs_channel: discord.TextChannel) -> None:
+        guild, _user, config = await self._ensure_admin(interaction)
+        if not guild or not config:
+            return
+        config["setup"]["logs_channel_id"] = str(logs_channel.id)
+        save_state(state)
+        await _safe_reply(interaction, "✅ Logs channel updated.")
+
     async def cmd_message(self, interaction: discord.Interaction) -> None:
         guild, _user, config = await self._ensure_admin(interaction)
         if not guild or not config:
@@ -216,7 +249,9 @@ class TicketHandlers:
             f"- limit: `{s['ticket_limit']}`\n"
             f"- cooldown: `{s['open_cooldown_seconds']}s`\n"
             f"- auto_close_hours: `{s['auto_close_hours']}`\n"
-            f"- support roles: `{len(s['support_role_ids'])}`",
+            f"- support roles: `{len(s['support_role_ids'])}`\n"
+            f"- transcript_on_close: `{s.get('transcript_on_close', True)}`\n"
+            f"- claim_required: `{s.get('claim_required', False)}`",
         )
 
     async def cmd_set_prefix(self, interaction: discord.Interaction, prefix: str) -> None:
@@ -251,6 +286,22 @@ class TicketHandlers:
         config["setup"]["auto_close_hours"] = int(hours)
         save_state(state)
         await _safe_reply(interaction, f"✅ Auto-close set to {hours} hour(s)")
+
+    async def cmd_set_transcript_on_close(self, interaction: discord.Interaction, enabled: bool) -> None:
+        guild, _user, config = await self._ensure_admin(interaction)
+        if not guild or not config:
+            return
+        config["setup"]["transcript_on_close"] = bool(enabled)
+        save_state(state)
+        await _safe_reply(interaction, f"✅ transcript_on_close = {enabled}")
+
+    async def cmd_set_claim_required(self, interaction: discord.Interaction, enabled: bool) -> None:
+        guild, _user, config = await self._ensure_admin(interaction)
+        if not guild or not config:
+            return
+        config["setup"]["claim_required"] = bool(enabled)
+        save_state(state)
+        await _safe_reply(interaction, f"✅ claim_required = {enabled}")
 
     async def cmd_staff_add(self, interaction: discord.Interaction, role: discord.Role) -> None:
         guild, _user, config = await self._ensure_admin(interaction)
@@ -311,6 +362,9 @@ class TicketHandlers:
         guild, user, config, ticket = await self._ticket_context(interaction)
         if not guild:
             return
+        if config["setup"].get("claim_required") and not ticket.get("claimed_by") and not _is_mod(user, config):
+            await _safe_reply(interaction, "This server requires claiming the ticket first.")
+            return
         if ticket["closed"]:
             await _safe_reply(interaction, "Ticket already closed.")
             return
@@ -321,6 +375,9 @@ class TicketHandlers:
             await interaction.channel.set_permissions(owner, send_messages=False, view_channel=True)
         save_state(state)
         await _safe_reply(interaction, "🔒 Ticket closed.")
+        log_file = None
+        if config["setup"].get("transcript_on_close", True) and isinstance(interaction.channel, discord.TextChannel):
+            log_file = await create_ticket_transcript(interaction.channel, int(ticket["ticket_number"]))
         await _send_log(
             guild,
             config,
@@ -333,6 +390,7 @@ class TicketHandlers:
                 "ticket_number": int(ticket["ticket_number"]),
                 "guild_name": guild.name,
             },
+            log_file,
         )
 
     async def cmd_reopen(self, interaction: discord.Interaction) -> None:
@@ -352,6 +410,9 @@ class TicketHandlers:
     async def cmd_delete(self, interaction: discord.Interaction) -> None:
         guild, user, config, ticket = await self._ticket_context(interaction, require_mod=True)
         if not guild or not isinstance(interaction.channel, discord.TextChannel):
+            return
+        if config["setup"].get("claim_required") and not ticket.get("claimed_by"):
+            await _safe_reply(interaction, "Claim ticket first before deleting.")
             return
         transcript = await create_ticket_transcript(interaction.channel, int(ticket["ticket_number"]))
         await _send_log(
@@ -466,11 +527,10 @@ register_ticket_commands(ticket_group, handlers)
 tree.add_command(ticket_group)
 
 
-@client.event
-async def setup_hook() -> None:
-    client.add_view(build_panel_view())
-    client.add_view(build_control_view())
-    client.loop.create_task(_auto_close_worker())
+@tree.error
+async def on_app_command_error(interaction: discord.Interaction, error: Exception) -> None:
+    print(f"[ERROR] app command failed: {error}")
+    await _safe_reply(interaction, "Unexpected error while processing command.")
 
 
 @client.event
