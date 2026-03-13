@@ -1,68 +1,65 @@
-# RevoTickets
+# RevoTickets (Python Edition)
 
-بوت تذاكر احترافي لـ Discord يعتمد على الأزرار + Slash Commands، مع حفظ دائم للبيانات وسجل شامل.
+تم تحويل المشروع بالكامل إلى **Python** باستخدام `discord.py`.
 
-## لماذا النسخة هذه أقوى؟
+## Requirements
 
-- تحميل تلقائي لملف `.env` عبر `dotenv` (سبب شائع لفشل التشغيل تم إصلاحه).
-- توحيد تعريف أوامر `/ticket` في ملف واحد مشترك بين التشغيل والنشر لتفادي عدم تطابق الأوامر.
-- معالجة أخطاء مركزية داخل التفاعلات حتى لا يتوقف البوت عند أي خطأ مفاجئ.
-- صلاحيات دقيقة: إدارة/دعم فقط للإجراءات الحساسة.
-- تنظيف تلقائي لحالة التذكرة عند حذف القناة.
-- Transcript HTML + Logs منظمة لكل الأحداث المهمة.
+- Python 3.11+
+- pip
 
-## متطلبات التشغيل
+## Install
 
-- **Node.js: v24.14.0** (موصى به/مدعوم رسميًا في هذا المشروع).
-- npm حديث متوافق مع Node 24.
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
-## الأوامر
+## Configure
 
-`/ticket setup`
-`/ticket message`
-`/ticket staff-role`
-`/ticket limit`
-`/ticket close`
-`/ticket reopen`
-`/ticket delete`
-`/ticket transcript`
-`/ticket add`
-`/ticket remove`
-`/ticket rename`
+```bash
+cp .env.example .env
+```
 
-## التشغيل الصحيح
+ضع القيم التالية داخل `.env`:
 
-1. تثبيت الحزم:
-   ```bash
-   npm install
-   ```
-2. إنشاء ملف البيئة:
-   ```bash
-   cp .env.example .env
-   ```
-3. عدّل `.env`:
-   - `DISCORD_TOKEN`
-   - `CLIENT_ID`
-   - `GUILD_ID` (اختياري للتجربة السريعة على سيرفر واحد)
-4. نشر الأوامر:
-   ```bash
-   npm run deploy
-   ```
-5. تشغيل البوت:
-   ```bash
-   npm start
-   ```
+- `DISCORD_TOKEN`
+- `CLIENT_ID`
+- `GUILD_ID` (اختياري لتسريع مزامنة الأوامر في سيرفر تجريبي)
 
-## إعداد السيرفر
+## Run Bot
 
-1. نفّذ `/ticket setup` وحدد:
-   - روم البانل
-   - فئة التذاكر
-   - روم اللوغ
-2. نفّذ `/ticket staff-role` لإضافة رتب الدعم.
-3. نفّذ `/ticket limit 1` (أو حسب احتياجك).
-4. نفّذ `/ticket message` لنشر زر فتح التذكرة.
+```bash
+python src/bot.py
+```
 
-## ملاحظة
+## Optional: Deploy/Sync commands manually
 
-لا يوجد نظام كلمة مرور داخل البوت. التحكم بالكامل مبني على صلاحيات Discord ورتب الدعم.
+```bash
+python src/deploy_commands.py
+```
+
+## Ticket Features
+
+- Button Open Ticket
+- `/ticket` command with actions:
+  - setup
+  - message
+  - staff-role
+  - limit
+  - close
+  - reopen
+  - delete
+  - transcript
+  - add
+  - remove
+  - rename
+- JSON persistence in `data.json`
+- Ticket logs to logs channel
+- HTML transcript export
+- Anti-spam ticket creation cooldown
+
+## Notes
+
+- التحكم بالصلاحيات يعتمد على Discord permissions + support roles.
+- عند حذف قناة تذكرة يتم تنظيفها تلقائياً من قاعدة البيانات.
