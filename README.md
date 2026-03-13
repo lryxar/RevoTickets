@@ -1,13 +1,17 @@
-# RevoTickets (Python Edition)
+# RevoTickets — Python Only (Advanced)
 
-تم تحويل المشروع بالكامل إلى **Python** باستخدام `discord.py`.
+بوت تذاكر احترافي بـ **Python فقط** باستخدام `discord.py` — بدون أي Runtime JavaScript.
 
-## Requirements
+## مميزات قوية
 
-- Python 3.11+
-- pip
+- نظام تذاكر بالأزرار
+- نظام Slash Commands متعدد وكامل
+- صلاحيات دقيقة للدعم/الإدارة
+- تخصيصات متقدمة (Prefix / Welcome / Cooldown / Auto-Close)
+- Transcript HTML + Logs احترافية
+- حفظ دائم للإعدادات والتذاكر في `data.json`
 
-## Install
+## التثبيت
 
 ```bash
 python -m venv .venv
@@ -15,51 +19,61 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Configure
+## الإعداد
 
 ```bash
 cp .env.example .env
 ```
 
-ضع القيم التالية داخل `.env`:
+املأ:
 
 - `DISCORD_TOKEN`
-- `CLIENT_ID`
-- `GUILD_ID` (اختياري لتسريع مزامنة الأوامر في سيرفر تجريبي)
+- `GUILD_ID` (اختياري)
 
-## Run Bot
+## التشغيل
 
 ```bash
 python src/bot.py
 ```
 
-## Optional: Deploy/Sync commands manually
+## مزامنة الأوامر (اختياري)
 
 ```bash
 python src/deploy_commands.py
 ```
 
-## Ticket Features
+## أوامر البوت (متعددة)
 
-- Button Open Ticket
-- `/ticket` command with actions:
-  - setup
-  - message
-  - staff-role
-  - limit
-  - close
-  - reopen
-  - delete
-  - transcript
-  - add
-  - remove
-  - rename
-- JSON persistence in `data.json`
-- Ticket logs to logs channel
-- HTML transcript export
-- Anti-spam ticket creation cooldown
+### إعداد وإدارة النظام
+- `/ticket setup`
+- `/ticket message`
+- `/ticket settings`
+- `/ticket set_prefix`
+- `/ticket set_welcome`
+- `/ticket set_cooldown`
+- `/ticket set_autoclose`
+- `/ticket staff_add`
+- `/ticket staff_remove`
+- `/ticket staff_list`
+- `/ticket limit`
 
-## Notes
+### إدارة التذكرة
+- `/ticket claim`
+- `/ticket unclaim`
+- `/ticket close`
+- `/ticket reopen`
+- `/ticket delete`
+- `/ticket transcript`
+- `/ticket add`
+- `/ticket remove`
+- `/ticket rename`
+- `/ticket move`
+- `/ticket priority`
+- `/ticket stats`
+- `/ticket info`
 
-- التحكم بالصلاحيات يعتمد على Discord permissions + support roles.
-- عند حذف قناة تذكرة يتم تنظيفها تلقائياً من قاعدة البيانات.
+## ملاحظات
+
+- المشروع Python-only بالكامل.
+- التحكم مبني على صلاحيات Discord + رتب الدعم.
+- يوجد تنظيف تلقائي للبيانات عند حذف قناة التذكرة.

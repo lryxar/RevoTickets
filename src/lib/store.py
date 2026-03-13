@@ -16,6 +16,9 @@ def _default_guild_state() -> Dict[str, Any]:
             "support_role_ids": [],
             "ticket_limit": 1,
             "ticket_prefix": "ticket",
+            "open_cooldown_seconds": 7,
+            "welcome_message": "Support team will assist you shortly.",
+            "auto_close_hours": 0,
         },
         "ticket_counter": 0,
         "open_tickets": {},
@@ -34,18 +37,27 @@ def _ensure_file() -> None:
 def _normalize_guild(raw_guild: Dict[str, Any] | None) -> Dict[str, Any]:
     raw_guild = raw_guild or {}
     setup = raw_guild.get("setup") or {}
-    base = _default_guild_state()
+    base = _default_guild_state()["setup"]
+
+    ticket_limit = setup.get("ticket_limit", 1)
+    cooldown = setup.get("open_cooldown_seconds", 7)
+    auto_close_hours = setup.get("auto_close_hours", 0)
 
     return {
         "setup": {
-            "panel_channel_id": setup.get("panel_channel_id", base["setup"]["panel_channel_id"]),
-            "ticket_category_id": setup.get("ticket_category_id", base["setup"]["ticket_category_id"]),
-            "logs_channel_id": setup.get("logs_channel_id", base["setup"]["logs_channel_id"]),
+            "panel_channel_id": setup.get("panel_channel_id", base["panel_channel_id"]),
+            "ticket_category_id": setup.get("ticket_category_id", base["ticket_category_id"]),
+            "logs_channel_id": setup.get("logs_channel_id", base["logs_channel_id"]),
             "support_role_ids": list(dict.fromkeys(setup.get("support_role_ids", []))),
-            "ticket_limit": setup.get("ticket_limit", 1) if isinstance(setup.get("ticket_limit", 1), int) and setup.get("ticket_limit", 1) > 0 else 1,
+            "ticket_limit": ticket_limit if isinstance(ticket_limit, int) and ticket_limit > 0 else 1,
             "ticket_prefix": setup.get("ticket_prefix", "ticket") or "ticket",
+            "open_cooldown_seconds": cooldown if isinstance(cooldown, int) and cooldown >= 3 else 7,
+            "welcome_message": (setup.get("welcome_message") or base["welcome_message"])[:1200],
+            "auto_close_hours": auto_close_hours if isinstance(auto_close_hours, int) and auto_close_hours >= 0 else 0,
         },
-        "ticket_counter": raw_guild.get("ticket_counter", 0) if isinstance(raw_guild.get("ticket_counter", 0), int) and raw_guild.get("ticket_counter", 0) >= 0 else 0,
+        "ticket_counter": raw_guild.get("ticket_counter", 0)
+        if isinstance(raw_guild.get("ticket_counter", 0), int) and raw_guild.get("ticket_counter", 0) >= 0
+        else 0,
         "open_tickets": raw_guild.get("open_tickets", {}) if isinstance(raw_guild.get("open_tickets", {}), dict) else {},
     }
 

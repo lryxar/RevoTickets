@@ -3,57 +3,49 @@ from __future__ import annotations
 import os
 
 import discord
-from discord import app_commands
 from dotenv import load_dotenv
+
+from lib.commands_py import build_ticket_group, register_ticket_commands
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
-CLIENT_ID = os.getenv("CLIENT_ID")
 GUILD_ID = os.getenv("GUILD_ID")
 
-if not TOKEN or not CLIENT_ID:
-    raise RuntimeError("DISCORD_TOKEN and CLIENT_ID are required in .env")
+if not TOKEN:
+    raise RuntimeError("DISCORD_TOKEN is required in .env")
+
+
+class _NoopHandlers:
+    def __getattr__(self, _name):
+        async def _noop(*_args, **_kwargs):
+            return None
+
+        return _noop
 
 
 class DeployClient(discord.Client):
     def __init__(self) -> None:
         super().__init__(intents=discord.Intents.none())
-        self.tree = app_commands.CommandTree(self)
+        self.tree = discord.app_commands.CommandTree(self)
 
     async def setup_hook(self) -> None:
-        @self.tree.command(name="ticket", description="Ticket management")
-        @app_commands.describe(action="ticket action")
-        @app_commands.choices(action=[
-            app_commands.Choice(name="setup", value="setup"),
-            app_commands.Choice(name="message", value="message"),
-            app_commands.Choice(name="staff-role", value="staff-role"),
-            app_commands.Choice(name="limit", value="limit"),
-            app_commands.Choice(name="close", value="close"),
-            app_commands.Choice(name="reopen", value="reopen"),
-            app_commands.Choice(name="delete", value="delete"),
-            app_commands.Choice(name="transcript", value="transcript"),
-            app_commands.Choice(name="add", value="add"),
-            app_commands.Choice(name="remove", value="remove"),
-            app_commands.Choice(name="rename", value="rename"),
-        ])
-        async def ticket(interaction: discord.Interaction, action: app_commands.Choice[str]) -> None:  # pragma: no cover
-            await interaction.response.send_message(f"Action: {action.value}", ephemeral=True)
+        group = build_ticket_group()
+        register_ticket_commands(group, _NoopHandlers())
+        self.tree.add_command(group)
 
         if GUILD_ID:
-            guild_obj = discord.Object(id=int(GUILD_ID))
-            self.tree.copy_global_to(guild=guild_obj)
-            synced = await self.tree.sync(guild=guild_obj)
-            print(f"Synced {len(synced)} guild commands.")
+            guild = discord.Object(id=int(GUILD_ID))
+            synced = await self.tree.sync(guild=guild)
+            print(f"Synced {len(synced)} guild command(s)")
         else:
             synced = await self.tree.sync()
-            print(f"Synced {len(synced)} global commands.")
+            print(f"Synced {len(synced)} global command(s)")
 
         await self.close()
 
 
 def main() -> None:
-    client = DeployClient()
-    client.run(TOKEN)
+    DeployClient().run(TOKEN)
 
 
 if __name__ == "__main__":
